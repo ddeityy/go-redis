@@ -2,22 +2,21 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+
+	"go-redis/server/pb"
 
 	"google.golang.org/grpc"
 )
 
 type Server struct {
+	pb.UnimplementedCacheServer
 	cache *Cache
 }
 
-// mustEmbedUnimplementedCacheServer implements CacheServer.
-func (s Server) mustEmbedUnimplementedCacheServer() {
-	panic("unimplemented")
-}
-
-func (s Server) Get(ctx context.Context, key *Key) (*Value, error) {
+func (s Server) Get(ctx context.Context, key *pb.Key) (*pb.Value, error) {
 	log.Println("Get request:", key.Key)
 	val, err := s.cache.Get(key.Key)
 
@@ -25,13 +24,16 @@ func (s Server) Get(ctx context.Context, key *Key) (*Value, error) {
 		return nil, err
 	}
 
-	return &Value{Value: string(val)}, nil
+	return &pb.Value{Value: string(val)}, nil
 }
 
-func (s Server) Set(ctx context.Context, kv *KeyValue) (*Stored, error) {
+func (s Server) Set(ctx context.Context, kv *pb.KeyValue) (*pb.Cached, error) {
 	log.Println("Set request:", kv.Key)
-	s.cache.Set(kv.Key, kv.Value)
-	return &Stored{Stored: true}, nil
+	set := s.cache.Set(kv.Key, kv.Value)
+	if set {
+		return &pb.Cached{Cached: true}, nil
+	}
+	return nil, fmt.Errorf("key %v already exists", kv.Key)
 }
 
 func RunServer() {
@@ -41,9 +43,9 @@ func RunServer() {
 	}
 
 	grpcServer := grpc.NewServer()
-	cache := Cache{}
-	serv := Server{cache.Default()}
-	RegisterCacheServer(grpcServer, serv)
+	cache := NewCache()
+	serv := Server{pb.UnimplementedCacheServer{}, cache}
+	pb.RegisterCacheServer(grpcServer, serv)
 
 	log.Println("Listening on", lis.Addr().String())
 

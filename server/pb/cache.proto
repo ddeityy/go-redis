@@ -1,7 +1,7 @@
 syntax = "proto3";
-option go_package = "/server";
+option go_package = "/pb";
 
-package server;
+package pb;
 
 message Key {
     string key = 1;
@@ -16,11 +16,11 @@ message KeyValue {
     string value = 2;
 }
 
-message Stored {
-    bool stored = 1;
+message Cached {
+    bool cached = 1;
 }
 
 service Cache {
   rpc Get(Key) returns (Value) {}
-  rpc Set(KeyValue) returns (Stored) {}
+  rpc Set(KeyValue) returns (Cached) {}
 }

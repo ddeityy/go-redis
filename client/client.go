@@ -1,8 +1,7 @@
 package client
 
 import (
-	"context"
-	"go-redis/server"
+	"go-redis/server/pb"
 	"log"
 
 	"google.golang.org/grpc"
@@ -10,30 +9,18 @@ import (
 )
 
 type Client struct {
+	*grpc.ClientConn
+	pb.CacheClient
 }
 
-func RunClient() {
+func NewClient() *Client {
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(":9000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did not connect: %s", err)
+		log.Fatalf("could not connect: %s", err)
 	}
-	defer conn.Close()
 
-	c := server.NewCacheClient(conn)
+	c := pb.NewCacheClient(conn)
 
-	kv := &server.KeyValue{Key: "hello", Value: "world"}
-
-	set, err := c.Set(context.Background(), kv)
-	if err != nil {
-		log.Fatalf("Error when calling Set: %s", err)
-	}
-	log.Printf("Cached: %v", set.Stored)
-
-	get, err := c.Get(context.Background(), &server.Key{Key: "hello"})
-	if err != nil {
-		log.Fatalf("Error when calling Get: %s", err)
-	}
-	log.Printf("Cached value: %s", get.Value)
-
+	return &Client{conn, c}
 }

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.3
-// source: server/cache.proto
+// source: server/pb/cache.proto
 
-package server
+package pb
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Cache_Get_FullMethodName = "/server.Cache/Get"
-	Cache_Set_FullMethodName = "/server.Cache/Set"
+	Cache_Get_FullMethodName = "/pb.Cache/Get"
+	Cache_Set_FullMethodName = "/pb.Cache/Set"
 )
 
 // CacheClient is the client API for Cache service.
@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CacheClient interface {
 	Get(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Value, error)
-	Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Stored, error)
+	Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Cached, error)
 }
 
 type cacheClient struct {
@@ -48,8 +48,8 @@ func (c *cacheClient) Get(ctx context.Context, in *Key, opts ...grpc.CallOption)
 	return out, nil
 }
 
-func (c *cacheClient) Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Stored, error) {
-	out := new(Stored)
+func (c *cacheClient) Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Cached, error) {
+	out := new(Cached)
 	err := c.cc.Invoke(ctx, Cache_Set_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (c *cacheClient) Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOp
 // for forward compatibility
 type CacheServer interface {
 	Get(context.Context, *Key) (*Value, error)
-	Set(context.Context, *KeyValue) (*Stored, error)
+	Set(context.Context, *KeyValue) (*Cached, error)
 	mustEmbedUnimplementedCacheServer()
 }
 
@@ -73,7 +73,7 @@ type UnimplementedCacheServer struct {
 func (UnimplementedCacheServer) Get(context.Context, *Key) (*Value, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedCacheServer) Set(context.Context, *KeyValue) (*Stored, error) {
+func (UnimplementedCacheServer) Set(context.Context, *KeyValue) (*Cached, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
 }
 func (UnimplementedCacheServer) mustEmbedUnimplementedCacheServer() {}
@@ -129,7 +129,7 @@ func _Cache_Set_Handler(srv interface{}, ctx context.Context, dec func(interface
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Cache_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "server.Cache",
+	ServiceName: "pb.Cache",
 	HandlerType: (*CacheServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -142,5 +142,5 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "server/cache.proto",
+	Metadata: "server/pb/cache.proto",
 }
