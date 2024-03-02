@@ -29,11 +29,11 @@ func (s Server) Get(ctx context.Context, key *pb.Key) (*pb.Value, error) {
 
 func (s Server) Set(ctx context.Context, kv *pb.KeyValue) (*pb.Cached, error) {
 	log.Println("Set request:", kv.Key)
-	set := s.cache.Set(kv.Key, kv.Value)
-	if set {
+	if err := s.cache.Set(kv.Key, kv.Value); err != nil {
 		return &pb.Cached{Cached: true}, nil
 	}
-	return nil, fmt.Errorf("key %v already exists", kv.Key)
+
+	return &pb.Cached{Cached: false}, fmt.Errorf("key %v already exists", kv.Key)
 }
 
 func RunServer() {
