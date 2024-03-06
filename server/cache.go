@@ -1,22 +1,25 @@
 package server
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
 
 type value struct {
-	data         string
-	accesed      int
-	set          time.Time
-	lastAccessed time.Time
-	expireAfter  time.Duration
+	key        string
+	data       string
+	accessed   int32
+	ttl        time.Duration
+	elementPtr *list.Element
 }
 
 type EvictionAlgo interface {
 	evict(*Cache) error
+	ttl() time.Duration
 }
 
 type Eviction struct {
@@ -24,7 +27,8 @@ type Eviction struct {
 }
 
 type Cache struct {
-	storage      sync.Map
+	store        sync.Map
+	list         *list.List
 	evictionAlgo EvictionAlgo
 	capacity     int
 	maxCapacity  int
@@ -32,53 +36,80 @@ type Cache struct {
 
 // Returns a new cache instance with LRU by default
 func NewCache() *Cache {
-	return &Cache{
-		storage:      sync.Map{},
-		evictionAlgo: &LRU{},
+	var l list.List
+	l.Init()
+	c := &Cache{
+		store:        sync.Map{},
 		capacity:     0,
-		maxCapacity:  500,
+		maxCapacity:  25,
+		evictionAlgo: &LRU{},
+		list:         &l,
 	}
+	return c
 }
 
 func (c *Cache) Get(key string) (string, error) {
-	val, ok := c.storage.Load(key)
+	val, ok := c.store.Load(key)
 	if ok {
-		out, ok := val.(value)
+		v, ok := val.(value)
 		if ok {
-			out.accesed++
-			out.lastAccessed = time.Now()
-			return out.data, nil
+			c.list.MoveToBack(v.elementPtr)
+			v.accessed++
+			c.store.Store(key, v)
+			return v.data, nil
 		}
-		return "", errors.New("type assertion failed")
+		return "", errors.New("cache: type assertion failed")
 	}
-	return "", errors.New("key not found")
+	return "", errors.New("cache: key not found")
 }
 
 // Puts a key-value pair into cache, returns false if key already exists
 func (c *Cache) Set(key string, val string) error {
-
 	if c.capacity >= c.maxCapacity {
 		if err := c.evictionAlgo.evict(c); err != nil {
 			return err
 		}
 	}
 
-	if _, ok := c.storage.Load(key); ok {
-		return fmt.Errorf("set: key already exists")
+	if _, ok := c.store.Load(key); ok {
+		return fmt.Errorf("cache: key already exists")
 	}
 
-	c.storage.Store(
+	var v value
+
+	v.data = val
+	v.accessed = 1
+	v.ttl = c.evictionAlgo.ttl()
+	v.key = key
+	v.elementPtr = c.list.PushBack(v)
+
+	c.store.Store(
 		key,
-		value{
-			data:         val,
-			accesed:      0,
-			set:          time.Now(),
-			lastAccessed: time.Now(),
-			expireAfter:  time.Second * 20,
-		},
+		v,
 	)
+	c.capacity++
+
+	if v.ttl != 0 {
+		go func() {
+			time.AfterFunc(v.ttl, func() {
+				log.Println("ttl evicted", key)
+				c.store.Delete(key)
+				c.list.Remove(v.elementPtr)
+				c.capacity--
+			})
+		}()
+	}
 
 	return nil
+}
+
+func (c *Cache) GetCacheData() map[string]value {
+	m := make(map[string]value)
+	c.store.Range(func(k any, v any) bool {
+		m[k.(string)] = v.(value)
+		return true
+	})
+	return m
 }
 
 func (c *Cache) SetEvictionStrategy(algo EvictionAlgo) {

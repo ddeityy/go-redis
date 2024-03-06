@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Cache_Get_FullMethodName = "/pb.Cache/Get"
-	Cache_Set_FullMethodName = "/pb.Cache/Set"
+	Cache_Get_FullMethodName            = "/pb.Cache/Get"
+	Cache_Set_FullMethodName            = "/pb.Cache/Set"
+	Cache_GetCacheData_FullMethodName   = "/pb.Cache/GetCacheData"
+	Cache_SwitchStrategy_FullMethodName = "/pb.Cache/SwitchStrategy"
 )
 
 // CacheClient is the client API for Cache service.
@@ -28,7 +30,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CacheClient interface {
 	Get(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Value, error)
-	Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Cached, error)
+	Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Response, error)
+	GetCacheData(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Data, error)
+	SwitchStrategy(ctx context.Context, in *Strategy, opts ...grpc.CallOption) (*Response, error)
 }
 
 type cacheClient struct {
@@ -48,9 +52,27 @@ func (c *cacheClient) Get(ctx context.Context, in *Key, opts ...grpc.CallOption)
 	return out, nil
 }
 
-func (c *cacheClient) Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Cached, error) {
-	out := new(Cached)
+func (c *cacheClient) Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
 	err := c.cc.Invoke(ctx, Cache_Set_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) GetCacheData(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Data, error) {
+	out := new(Data)
+	err := c.cc.Invoke(ctx, Cache_GetCacheData_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) SwitchStrategy(ctx context.Context, in *Strategy, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, Cache_SwitchStrategy_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +84,9 @@ func (c *cacheClient) Set(ctx context.Context, in *KeyValue, opts ...grpc.CallOp
 // for forward compatibility
 type CacheServer interface {
 	Get(context.Context, *Key) (*Value, error)
-	Set(context.Context, *KeyValue) (*Cached, error)
+	Set(context.Context, *KeyValue) (*Response, error)
+	GetCacheData(context.Context, *Empty) (*Data, error)
+	SwitchStrategy(context.Context, *Strategy) (*Response, error)
 	mustEmbedUnimplementedCacheServer()
 }
 
@@ -73,8 +97,14 @@ type UnimplementedCacheServer struct {
 func (UnimplementedCacheServer) Get(context.Context, *Key) (*Value, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedCacheServer) Set(context.Context, *KeyValue) (*Cached, error) {
+func (UnimplementedCacheServer) Set(context.Context, *KeyValue) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
+}
+func (UnimplementedCacheServer) GetCacheData(context.Context, *Empty) (*Data, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCacheData not implemented")
+}
+func (UnimplementedCacheServer) SwitchStrategy(context.Context, *Strategy) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwitchStrategy not implemented")
 }
 func (UnimplementedCacheServer) mustEmbedUnimplementedCacheServer() {}
 
@@ -125,6 +155,42 @@ func _Cache_Set_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Cache_GetCacheData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).GetCacheData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_GetCacheData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).GetCacheData(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cache_SwitchStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Strategy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).SwitchStrategy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_SwitchStrategy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).SwitchStrategy(ctx, req.(*Strategy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Cache_ServiceDesc is the grpc.ServiceDesc for Cache service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,6 +205,14 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Set",
 			Handler:    _Cache_Set_Handler,
+		},
+		{
+			MethodName: "GetCacheData",
+			Handler:    _Cache_GetCacheData_Handler,
+		},
+		{
+			MethodName: "SwitchStrategy",
+			Handler:    _Cache_SwitchStrategy_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

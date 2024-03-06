@@ -1,12 +1,14 @@
 package server
 
-import (
-	"fmt"
-)
+import "time"
 
 type TTL struct{}
 
 func (s *TTL) evict(c *Cache) error {
-	fmt.Println("Evicting cache using LRU strtegy")
 	return nil
+}
+
+func (s *TTL) ttl() time.Duration {
+	ttl := time.Second * 20
+	return ttl
 }

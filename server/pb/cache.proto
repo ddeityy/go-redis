@@ -16,11 +16,37 @@ message KeyValue {
     string value = 2;
 }
 
-message Cached {
-    bool cached = 1;
+message CachedItem {
+    string key = 1;
+    string value = 2;
+    int32 accessed = 3;
+
+}
+
+message Response {
+    int32 code = 1;
+    string message = 2;
+}
+
+message Data {
+    repeated CachedItem items = 1;
+}
+
+message Empty {}
+
+enum StrategyEnum {
+    LRU = 0;
+    LFU = 1;
+    TTL = 2;
+}
+
+message Strategy {
+    StrategyEnum strategy = 1;
 }
 
 service Cache {
   rpc Get(Key) returns (Value) {}
-  rpc Set(KeyValue) returns (Cached) {}
+  rpc Set(KeyValue) returns (Response) {}
+  rpc GetCacheData(Empty) returns (Data) {}
+  rpc SwitchStrategy(Strategy) returns (Response) {}
 }

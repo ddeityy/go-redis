@@ -20,6 +20,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type StrategyEnum int32
+
+const (
+	StrategyEnum_LRU StrategyEnum = 0
+	StrategyEnum_LFU StrategyEnum = 1
+	StrategyEnum_TTL StrategyEnum = 2
+)
+
+// Enum value maps for StrategyEnum.
+var (
+	StrategyEnum_name = map[int32]string{
+		0: "LRU",
+		1: "LFU",
+		2: "TTL",
+	}
+	StrategyEnum_value = map[string]int32{
+		"LRU": 0,
+		"LFU": 1,
+		"TTL": 2,
+	}
+)
+
+func (x StrategyEnum) Enum() *StrategyEnum {
+	p := new(StrategyEnum)
+	*p = x
+	return p
+}
+
+func (x StrategyEnum) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (StrategyEnum) Descriptor() protoreflect.EnumDescriptor {
+	return file_server_pb_cache_proto_enumTypes[0].Descriptor()
+}
+
+func (StrategyEnum) Type() protoreflect.EnumType {
+	return &file_server_pb_cache_proto_enumTypes[0]
+}
+
+func (x StrategyEnum) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use StrategyEnum.Descriptor instead.
+func (StrategyEnum) EnumDescriptor() ([]byte, []int) {
+	return file_server_pb_cache_proto_rawDescGZIP(), []int{0}
+}
+
 type Key struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -169,16 +218,18 @@ func (x *KeyValue) GetValue() string {
 	return ""
 }
 
-type Cached struct {
+type CachedItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Cached bool `protobuf:"varint,1,opt,name=cached,proto3" json:"cached,omitempty"`
+	Key      string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value    string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Accessed int32  `protobuf:"varint,3,opt,name=accessed,proto3" json:"accessed,omitempty"`
 }
 
-func (x *Cached) Reset() {
-	*x = Cached{}
+func (x *CachedItem) Reset() {
+	*x = CachedItem{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_server_pb_cache_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -186,13 +237,13 @@ func (x *Cached) Reset() {
 	}
 }
 
-func (x *Cached) String() string {
+func (x *CachedItem) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Cached) ProtoMessage() {}
+func (*CachedItem) ProtoMessage() {}
 
-func (x *Cached) ProtoReflect() protoreflect.Message {
+func (x *CachedItem) ProtoReflect() protoreflect.Message {
 	mi := &file_server_pb_cache_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -204,16 +255,217 @@ func (x *Cached) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Cached.ProtoReflect.Descriptor instead.
-func (*Cached) Descriptor() ([]byte, []int) {
+// Deprecated: Use CachedItem.ProtoReflect.Descriptor instead.
+func (*CachedItem) Descriptor() ([]byte, []int) {
 	return file_server_pb_cache_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Cached) GetCached() bool {
+func (x *CachedItem) GetKey() string {
 	if x != nil {
-		return x.Cached
+		return x.Key
 	}
-	return false
+	return ""
+}
+
+func (x *CachedItem) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *CachedItem) GetAccessed() int32 {
+	if x != nil {
+		return x.Accessed
+	}
+	return 0
+}
+
+type Response struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code    int32  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+}
+
+func (x *Response) Reset() {
+	*x = Response{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_pb_cache_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Response) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Response) ProtoMessage() {}
+
+func (x *Response) ProtoReflect() protoreflect.Message {
+	mi := &file_server_pb_cache_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Response.ProtoReflect.Descriptor instead.
+func (*Response) Descriptor() ([]byte, []int) {
+	return file_server_pb_cache_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Response) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *Response) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type Data struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Items []*CachedItem `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+}
+
+func (x *Data) Reset() {
+	*x = Data{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_pb_cache_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Data) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Data) ProtoMessage() {}
+
+func (x *Data) ProtoReflect() protoreflect.Message {
+	mi := &file_server_pb_cache_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Data.ProtoReflect.Descriptor instead.
+func (*Data) Descriptor() ([]byte, []int) {
+	return file_server_pb_cache_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Data) GetItems() []*CachedItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type Empty struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_pb_cache_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_server_pb_cache_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_server_pb_cache_proto_rawDescGZIP(), []int{6}
+}
+
+type Strategy struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Strategy StrategyEnum `protobuf:"varint,1,opt,name=strategy,proto3,enum=pb.StrategyEnum" json:"strategy,omitempty"`
+}
+
+func (x *Strategy) Reset() {
+	*x = Strategy{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_pb_cache_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Strategy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Strategy) ProtoMessage() {}
+
+func (x *Strategy) ProtoReflect() protoreflect.Message {
+	mi := &file_server_pb_cache_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Strategy.ProtoReflect.Descriptor instead.
+func (*Strategy) Descriptor() ([]byte, []int) {
+	return file_server_pb_cache_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Strategy) GetStrategy() StrategyEnum {
+	if x != nil {
+		return x.Strategy
+	}
+	return StrategyEnum_LRU
 }
 
 var File_server_pb_cache_proto protoreflect.FileDescriptor
@@ -227,13 +479,35 @@ var file_server_pb_cache_proto_rawDesc = []byte{
 	0x6c, 0x75, 0x65, 0x22, 0x32, 0x0a, 0x08, 0x4b, 0x65, 0x79, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12,
 	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65,
 	0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x20, 0x0a, 0x06, 0x43, 0x61, 0x63, 0x68, 0x65,
-	0x64, 0x12, 0x16, 0x0a, 0x06, 0x63, 0x61, 0x63, 0x68, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x08, 0x52, 0x06, 0x63, 0x61, 0x63, 0x68, 0x65, 0x64, 0x32, 0x47, 0x0a, 0x05, 0x43, 0x61, 0x63,
-	0x68, 0x65, 0x12, 0x1b, 0x0a, 0x03, 0x47, 0x65, 0x74, 0x12, 0x07, 0x2e, 0x70, 0x62, 0x2e, 0x4b,
-	0x65, 0x79, 0x1a, 0x09, 0x2e, 0x70, 0x62, 0x2e, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x00, 0x12,
-	0x21, 0x0a, 0x03, 0x53, 0x65, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x62, 0x2e, 0x4b, 0x65, 0x79, 0x56,
-	0x61, 0x6c, 0x75, 0x65, 0x1a, 0x0a, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x61, 0x63, 0x68, 0x65, 0x64,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x50, 0x0a, 0x0a, 0x43, 0x61, 0x63, 0x68, 0x65,
+	0x64, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x1a, 0x0a,
+	0x08, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x08, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x65, 0x64, 0x22, 0x38, 0x0a, 0x08, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x22, 0x2c, 0x0a, 0x04, 0x44, 0x61, 0x74, 0x61, 0x12, 0x24, 0x0a, 0x05, 0x69,
+	0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x70, 0x62, 0x2e,
+	0x43, 0x61, 0x63, 0x68, 0x65, 0x64, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d,
+	0x73, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x38, 0x0a, 0x08, 0x53, 0x74,
+	0x72, 0x61, 0x74, 0x65, 0x67, 0x79, 0x12, 0x2c, 0x0a, 0x08, 0x73, 0x74, 0x72, 0x61, 0x74, 0x65,
+	0x67, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70, 0x62, 0x2e, 0x53, 0x74,
+	0x72, 0x61, 0x74, 0x65, 0x67, 0x79, 0x45, 0x6e, 0x75, 0x6d, 0x52, 0x08, 0x73, 0x74, 0x72, 0x61,
+	0x74, 0x65, 0x67, 0x79, 0x2a, 0x29, 0x0a, 0x0c, 0x53, 0x74, 0x72, 0x61, 0x74, 0x65, 0x67, 0x79,
+	0x45, 0x6e, 0x75, 0x6d, 0x12, 0x07, 0x0a, 0x03, 0x4c, 0x52, 0x55, 0x10, 0x00, 0x12, 0x07, 0x0a,
+	0x03, 0x4c, 0x46, 0x55, 0x10, 0x01, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x54, 0x4c, 0x10, 0x02, 0x32,
+	0xa0, 0x01, 0x0a, 0x05, 0x43, 0x61, 0x63, 0x68, 0x65, 0x12, 0x1b, 0x0a, 0x03, 0x47, 0x65, 0x74,
+	0x12, 0x07, 0x2e, 0x70, 0x62, 0x2e, 0x4b, 0x65, 0x79, 0x1a, 0x09, 0x2e, 0x70, 0x62, 0x2e, 0x56,
+	0x61, 0x6c, 0x75, 0x65, 0x22, 0x00, 0x12, 0x23, 0x0a, 0x03, 0x53, 0x65, 0x74, 0x12, 0x0c, 0x2e,
+	0x70, 0x62, 0x2e, 0x4b, 0x65, 0x79, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x1a, 0x0c, 0x2e, 0x70, 0x62,
+	0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x25, 0x0a, 0x0c, 0x47,
+	0x65, 0x74, 0x43, 0x61, 0x63, 0x68, 0x65, 0x44, 0x61, 0x74, 0x61, 0x12, 0x09, 0x2e, 0x70, 0x62,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x08, 0x2e, 0x70, 0x62, 0x2e, 0x44, 0x61, 0x74, 0x61,
+	0x22, 0x00, 0x12, 0x2e, 0x0a, 0x0e, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x53, 0x74, 0x72, 0x61,
+	0x74, 0x65, 0x67, 0x79, 0x12, 0x0c, 0x2e, 0x70, 0x62, 0x2e, 0x53, 0x74, 0x72, 0x61, 0x74, 0x65,
+	0x67, 0x79, 0x1a, 0x0c, 0x2e, 0x70, 0x62, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
 	0x22, 0x00, 0x42, 0x05, 0x5a, 0x03, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x33,
 }
@@ -250,23 +524,35 @@ func file_server_pb_cache_proto_rawDescGZIP() []byte {
 	return file_server_pb_cache_proto_rawDescData
 }
 
-var file_server_pb_cache_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_server_pb_cache_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_server_pb_cache_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_server_pb_cache_proto_goTypes = []interface{}{
-	(*Key)(nil),      // 0: pb.Key
-	(*Value)(nil),    // 1: pb.Value
-	(*KeyValue)(nil), // 2: pb.KeyValue
-	(*Cached)(nil),   // 3: pb.Cached
+	(StrategyEnum)(0),  // 0: pb.StrategyEnum
+	(*Key)(nil),        // 1: pb.Key
+	(*Value)(nil),      // 2: pb.Value
+	(*KeyValue)(nil),   // 3: pb.KeyValue
+	(*CachedItem)(nil), // 4: pb.CachedItem
+	(*Response)(nil),   // 5: pb.Response
+	(*Data)(nil),       // 6: pb.Data
+	(*Empty)(nil),      // 7: pb.Empty
+	(*Strategy)(nil),   // 8: pb.Strategy
 }
 var file_server_pb_cache_proto_depIdxs = []int32{
-	0, // 0: pb.Cache.Get:input_type -> pb.Key
-	2, // 1: pb.Cache.Set:input_type -> pb.KeyValue
-	1, // 2: pb.Cache.Get:output_type -> pb.Value
-	3, // 3: pb.Cache.Set:output_type -> pb.Cached
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: pb.Data.items:type_name -> pb.CachedItem
+	0, // 1: pb.Strategy.strategy:type_name -> pb.StrategyEnum
+	1, // 2: pb.Cache.Get:input_type -> pb.Key
+	3, // 3: pb.Cache.Set:input_type -> pb.KeyValue
+	7, // 4: pb.Cache.GetCacheData:input_type -> pb.Empty
+	8, // 5: pb.Cache.SwitchStrategy:input_type -> pb.Strategy
+	2, // 6: pb.Cache.Get:output_type -> pb.Value
+	5, // 7: pb.Cache.Set:output_type -> pb.Response
+	6, // 8: pb.Cache.GetCacheData:output_type -> pb.Data
+	5, // 9: pb.Cache.SwitchStrategy:output_type -> pb.Response
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_server_pb_cache_proto_init() }
@@ -312,7 +598,55 @@ func file_server_pb_cache_proto_init() {
 			}
 		}
 		file_server_pb_cache_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Cached); i {
+			switch v := v.(*CachedItem); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_pb_cache_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Response); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_pb_cache_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Data); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_pb_cache_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Empty); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_pb_cache_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Strategy); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -329,13 +663,14 @@ func file_server_pb_cache_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_server_pb_cache_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   4,
+			NumEnums:      1,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_server_pb_cache_proto_goTypes,
 		DependencyIndexes: file_server_pb_cache_proto_depIdxs,
+		EnumInfos:         file_server_pb_cache_proto_enumTypes,
 		MessageInfos:      file_server_pb_cache_proto_msgTypes,
 	}.Build()
 	File_server_pb_cache_proto = out.File

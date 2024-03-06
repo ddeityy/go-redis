@@ -1,25 +1,31 @@
 package server
 
 import (
-	"container/list"
 	"fmt"
+	"log"
+	"time"
 )
 
-type LRU struct {
-	list *list.List
-}
+type LRU struct{}
 
 func (s *LRU) evict(c *Cache) error {
-	fmt.Println("Evicting cache using LRU strtegy")
-
-	last := s.list.Back()
-	if last == nil {
-		return fmt.Errorf("lru evict: can not evict from a nil list")
+	if c.list.Len() == 0 {
+		return fmt.Errorf("empty list")
 	}
-
-	s.list.Remove(last)
-
-	c.storage.Delete(last.Value)
-
+	var key string
+	val, ok := c.list.Front().Value.(value)
+	if ok {
+		key = val.key
+	} else {
+		return fmt.Errorf("nil element")
+	}
+	c.store.Delete(key)
+	c.list.Remove(c.list.Front())
+	c.capacity--
+	log.Println("lru evicted", key)
 	return nil
+}
+
+func (s *LRU) ttl() time.Duration {
+	return 0
 }
